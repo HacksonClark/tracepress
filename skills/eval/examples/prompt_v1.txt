@@ -1,0 +1,2 @@
+Classify the incident into JSON with keys `severity` (P0, P1, P2, P3) and `team` (database, frontend, payments).
+Incident: {input}
