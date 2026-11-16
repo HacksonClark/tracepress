@@ -1,11 +1,12 @@
 """TracePress: LLM-powered map/reduce over agent traces, for batch and streaming data."""
 
-from . import pipelines, read, watch
+from . import pipelines, read, subscriptions, watch
 from .adapters import Adapter, from_pandas, from_rows, replay
 from .lm import configure
 from .plan import GroupedTable, Table, acollect, collect, every, rows_to_pandas
 from .rows import Closed, Row, RowAdded, RowUpdated
 from .schema import Schema
+from .subscriptions import detect_subscription, doctor
 
 
 def last_run():
@@ -30,6 +31,8 @@ __all__ = [
     "acollect",
     "collect",
     "configure",
+    "detect_subscription",
+    "doctor",
     "every",
     "from_pandas",
     "from_rows",
@@ -38,5 +41,6 @@ __all__ = [
     "read",
     "replay",
     "rows_to_pandas",
+    "subscriptions",
     "watch",
 ]
