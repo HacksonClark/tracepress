@@ -22,15 +22,19 @@ For live or streamed traces, use the `tracepress-stream-traces` skill instead.
 ## Setup
 
 - In the TracePress repo: `uv sync`; run code with `uv run python ...`.
-- **There is no default model.** Configure one before running anything:
-  `tp.configure(lm="openrouter:openai/gpt-6-luna")`. That's the suggested model, at about $0.10
-  per million input tokens and $0.50 per million output tokens. Without one, a run fails with
-  "No LM configured". Use the model the user names if they name one.
-- Model strings are `provider:model`:
-  - `openrouter:<model>` needs `OPENROUTER_API_KEY`.
-  - `portkey:<provider slug>/<model>` (Portkey Model Catalog) needs `PORTKEY_API_KEY`.
-  - `typesafe:jev-latest` (TypeSafe's Jev) needs `TYPESAFE_API_KEY` and `tracepress[jev]`.
-  - A plain litellm string, with no `provider:` prefix, also works.
+- **There is no default model — use the user's existing subscription when no API key is set.**
+  - Run `uv run tracepress doctor` (or `tp.doctor()`) to see which subscription is logged in.
+  - **Zero-key subscription mode (Claude Code, Codex, Cursor):**
+    - `tp.configure(lm="subscription")` — auto-detects Claude Code, OpenAI Codex, or Cursor.
+    - `tp.configure(lm="claude-code:sonnet")` — uses `~/.claude/.credentials.json` OAuth HTTP or headless `claude -p`.
+    - `tp.configure(lm="codex:gpt-5.4")` — uses `~/.codex/auth.json` OAuth HTTP or headless `codex exec`.
+    - `tp.configure(lm="cursor:auto")` — uses headless Cursor CLI (`agent -p --mode=ask`).
+  - **API gateway mode** (suggested for large multi-thousand-step runs when keys are configured):
+    - `tp.configure(lm="openrouter:openai/gpt-6-luna")` (`OPENROUTER_API_KEY`; ~$0.10/$0.50 per 1M tokens).
+    - `portkey:<provider slug>/<model>` (`PORTKEY_API_KEY`).
+    - `typesafe:jev-latest` (`TYPESAFE_API_KEY` + `tracepress[jev]`).
+    - Any plain litellm string with no `provider:` prefix.
+  - Use the model the user names if they name one.
 - **Strongly prefer Jev for every stage where classification alone is enough.** Whenever a
   stage's job is to classify, flag, pick or score (did this step fail? which agent? which error
   mode? how severe?), recommend `lm="typesafe:jev-latest"` for it by default. It's far cheaper
@@ -94,10 +98,11 @@ For live or streamed traces, use the `tracepress-stream-traces` skill instead.
 
    Other sources, all with `steps` and `tool_calls` tables in the same step columns (so
    the same signatures work), plus `is_error` on each call:
-   - `tp.read.claude_code(path=None, project=None, limit=None)` and `tp.read.codex(...)`: the
-     user's own coding-agent sessions (`~/.claude/projects`, `~/.codex/sessions`). Hierarchy
-     `project > session > step`; a `sessions` table has `prompt, cwd, git_branch, model`, timing,
-     tokens and `n_tool_errors` (Claude Code adds `title`, `n_subagents`). Subagent steps have
+   - `tp.read.claude_code(path=None, project=None, limit=None)`, `tp.read.codex(...)`, and
+     `tp.read.cursor(...)`: the user's own coding-agent sessions (`~/.claude/projects`,
+     `~/.codex/sessions`, `~/.cursor/projects/*/agent-transcripts`). Hierarchy
+     `project > session > step`; a `sessions` table has `prompt, cwd`, timing, `n_steps`
+     and `n_tool_errors` (Claude Code and Cursor add `title`, `n_subagents`). Subagent steps have
      `is_sidechain=True` and an `agent_id`. Harness-injected messages are `source="system"`.
      These are private: don't copy their contents into files the user didn't ask for.
    - `tp.read.otel(path)`: OTLP JSON span files. Hierarchy `trace > step` (and `trace > span`).

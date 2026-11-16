@@ -1,0 +1,7 @@
+interface:
+  display_name: "TracePress"
+  short_description: "Analyze agent traces using your existing AI subscription"
+  brand_color: "#F97316"
+  default_prompt: "Use $tracepress to analyze agent traces with my active subscription."
+policy:
+  allow_implicit_invocation: true

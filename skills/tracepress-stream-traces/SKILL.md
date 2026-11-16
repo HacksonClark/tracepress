@@ -30,7 +30,7 @@ For one-off analysis of finished runs, use the `tracepress-analyze-traces` skill
    ```python
    import tracepress as tp
 
-   tp.configure(lm="openrouter:openai/gpt-6-luna")         # required; suggested model, or the user's choice
+   tp.configure(lm="subscription")                          # existing Claude/Codex/Cursor login, or openrouter:openai/gpt-6-luna
    src = tp.read.harbor("path/to/trials", tasks=["some-task"], limit=2)
    live = tp.replay(src, speed=60)      # 60x real time; speed=None = as fast as possible
    ```

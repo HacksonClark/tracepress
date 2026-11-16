@@ -18,16 +18,17 @@ The same pipeline runs on a finished batch or a live stream. It's built on
 uv add tracepress        # or: pip install tracepress
 ```
 
-Pick a model. GPT-6-luna is a good balance between cost, performance, and speed:
+Pick a model — either use the AI coding subscription you already pay for (Claude Code, Codex, or Cursor, with zero API keys), or point at an API gateway like OpenRouter:
 
 ```python
 import tracepress as tp
 
-os.environ["OPENROUTER_API_KEY"] = "sk-or-..."
-tp.configure(lm="openrouter:openai/gpt-6-luna")
+tp.configure(lm="subscription")          # auto-uses your Claude Code, Codex, or Cursor login
+# or explicit subscription: tp.configure(lm="claude-code:sonnet") / "codex:gpt-5.4" / "cursor:auto"
+# or OpenRouter: tp.configure(lm="openrouter:openai/gpt-6-luna")  # with OPENROUTER_API_KEY
 ```
 
-You can also use Portkey, any litellm model, or a model you host locally (Ollama, vLLM, or any
+Check which subscriptions are ready on your machine with `uv run tracepress doctor` (or `tp.doctor()`). You can also use Portkey, any litellm model, or a model you host locally (Ollama, vLLM, or any
 OpenAI-compatible server); see [docs/models.md](https://github.com/Ziems/tracepress/blob/main/docs/models.md).
 
 **Use Jev wherever a classification is all you need.** For a stage whose answer is a yes/no, a
@@ -41,15 +42,16 @@ operators. Keep a generative model for stages that write text. See
 ### Use it from your coding agent
 
 TracePress ships skills that teach Claude Code, Codex, Cursor and other coding agents to
-build and run pipelines for you:
+build and run pipelines for you — automatically using the subscription you are already coding from:
 
 ```bash
-npx skills add Ziems/tracepress
+npx skills add HacksonClark/tracepress
 ```
 
-Then ask in plain words: *"Load the Harbor job in jobs/my-job, find out why the failed runs
+Then invoke `/tracepress` (or `$tracepress` in Codex) or ask in plain words: *"Load the Harbor job in jobs/my-job, find out why the failed runs
 failed, and give me the common failure modes per task."*
 
+- **tracepress:** zero-key entry point (`/tracepress` / `$tracepress`) using your Claude Code, Codex, or Cursor subscription.
 - **tracepress-analyze-traces:** failure modes, summaries and comparisons over finished runs.
 - **tracepress-stream-traces:** live monitoring with running notes per trial.
 - **tracepress-add-adapter:** support for a new trace format (pull requests appreciated :P).
@@ -161,11 +163,11 @@ Here's how one trial's note grew, from [examples/live_monitor.py](https://github
 
 ## Your own coding sessions
 
-Claude Code and Codex keep every session on disk, so you can ask questions of your own
+Claude Code, Codex and Cursor keep every session on disk, so you can ask questions of your own
 work. Steps use the same columns as Harbor's, so the same pipelines work:
 
 ```python
-src = tp.read.claude_code(project="my-repo", limit=50)    # or tp.read.codex()
+src = tp.read.claude_code(project="my-repo", limit=50)    # or tp.read.codex() / tp.read.cursor()
 steps = src.steps.filter(lambda r: r.source == "user")
 moments = steps.lm_map("message -> frustrated: bool, about", instructions="Is the user frustrated with the agent?")
 ```
@@ -190,8 +192,8 @@ The raw span tree is there too, as the `spans` table.
 ## Works with
 
 - **Traces:** [Harbor](https://github.com/harbor-framework/harbor) jobs, ATIF trajectory files,
-Claude Code and Codex sessions, and OpenTelemetry (files or live). DSPy traces are planned.
-- **Models:** OpenRouter, Portkey, TypeSafe's Jev, locally hosted models, or almost any other model ([docs/models.md](https://github.com/Ziems/tracepress/blob/main/docs/models.md)).
+Claude Code, Codex and Cursor sessions, and OpenTelemetry (files or live). DSPy traces are planned.
+- **Models:** Existing AI coding subscriptions (Claude Code, Codex, Cursor), OpenRouter, Portkey, TypeSafe's Jev, locally hosted models, or almost any other model ([docs/models.md](https://github.com/Ziems/tracepress/blob/main/docs/models.md)).
 - **Output:** plain rows, or pandas with `.to_pandas()`.
 
 ## Learn more
