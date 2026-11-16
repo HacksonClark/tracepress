@@ -233,6 +233,7 @@ Placeholders exist so no single format shapes the design. Unimplemented adapters
 | `tp.read.harbor` | Harbor job / trials dir | dataset > task > trial > step | v1 |
 | `tp.read.claude_code` | Claude Code / Agent SDK session `.jsonl` | project > session > step (+ subagent sidechains) | v1 |
 | `tp.read.codex` | Codex CLI rollout `.jsonl` | project > session > step | v1 |
+| `tp.read.cursor` | Cursor Agent transcript `.jsonl` | project > session > step (+ subagent sidechains) | v1 |
 | `tp.read.otel` | OpenTelemetry spans (GenAI, OpenInference, OpenLLMetry) as OTLP JSON | trace > span, trace > step | v1 |
 | `tp.watch.otlp` | Live OTLP/HTTP receiver (protobuf or JSON) | trace > span, trace > step | v1 |
 | `tp.read.dspy` | DSPy program traces | run > module call (nested) > LM call | placeholder |

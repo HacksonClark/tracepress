@@ -20,11 +20,20 @@ Model strings have the form `provider:model`.
 
 | String | Goes to | Needs |
 |---|---|---|
+| `subscription` (or `subscription:auto`) | Auto-detected Claude Code, Codex, or Cursor subscription | Existing login (`claude`, `codex login`, or `agent login`) |
+| `claude-code` / `claude-code:sonnet` | Claude subscription (direct OAuth HTTP when `~/.claude/.credentials.json` exists, else headless `claude -p`) | Claude Code login or `CLAUDE_CODE_OAUTH_TOKEN` |
+| `codex` / `codex:gpt-5.4` | ChatGPT / Codex subscription (direct OAuth HTTP when `~/.codex/auth.json` exists, else headless `codex exec`) | `codex login` |
+| `cursor` / `cursor:auto` | Cursor subscription via isolated read-only `agent -p --mode=ask` | Cursor CLI `agent login` or `CURSOR_API_KEY` |
 | `openrouter:openai/gpt-6-luna` | OpenRouter | `OPENROUTER_API_KEY` |
 | `portkey:openai-prod/gpt-5` | Portkey's gateway, model `@openai-prod/gpt-5` from your Model Catalog | `PORTKEY_API_KEY` |
 | `typesafe:jev-latest` | TypeSafe's Jev, recommended for classification-only stages (see [Jev](#jev)) | `TYPESAFE_API_KEY` |
 | `anthropic/claude-opus-5` (no `provider:`) | litellm, as is | that provider's usual key |
 
+- **Existing AI subscriptions:** run `uv run tracepress doctor` (or `tp.doctor()`) to see which
+  coding-agent subscriptions are logged in on your machine. Force CLI subprocess mode with
+  `claude-cli:<model>`, `codex-cli:<model>`, or `cursor-cli:<model>`, or force direct OAuth HTTP
+  with `claude-oauth:<model>` or `codex-oauth:<model>`. CLI subprocess concurrency is bounded by
+  `tp.configure(cli_concurrency=8)` (or `TRACEPRESS_CLI_CONCURRENCY`).
 - **Portkey:** the part before the `/` is your Model Catalog provider slug. Writing
   `portkey:@openai-prod/gpt-5` means the same thing. Set `PORTKEY_BASE_URL` to use a
   self-hosted gateway.

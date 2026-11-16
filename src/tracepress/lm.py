@@ -47,11 +47,13 @@ class Config:
     # different cache entry, so a cached bad response can't fail the same call forever.
     fallback_adapters: list[dspy.Adapter] = field(default_factory=lambda: [dspy.XMLAdapter()])
     max_concurrency: int = 128
+    cli_concurrency: int = 8  # concurrent subprocesses for CLI subscription LMs (`claude`, `codex`, `agent`)
     # Seconds before a call is abandoned and retried. Requests occasionally hang (litellm
     # would wait 10 minutes), and one hang stalls a whole fold. Measured on GPT-6 Luna:
     # per-row and fold-step calls p50 ~4s, worst ~15s; reduces scale with their output.
     # Enforced here rather than passed to the LM, so changing it keeps the cache valid.
     request_timeout: float = 30.0  # lm_map / lm_filter / lm_extract / fold steps / running updates
+    cli_timeout: float = 120.0  # CLI subscription subprocess calls include startup + model thinking
     reduce_timeout: float = 120.0  # full reduce and merge calls, whose prompts can be large
     timeout_retries: int = 2
     # Rendered size budget for one reduce call before it is split into a tree reduce.
@@ -137,24 +139,57 @@ def _typesafe(model: str, spec: str) -> Any:
     return _labeled(TypeSafe(model), "typesafe", model)
 
 
-PROVIDERS = {"openrouter": _openrouter, "portkey": _portkey, "typesafe": _typesafe}
+from . import subscriptions
+
+PROVIDERS = {
+    "openrouter": _openrouter,
+    "portkey": _portkey,
+    "typesafe": _typesafe,
+    "subscription": subscriptions.build_subscription,
+    "claude-code": subscriptions.build_claude_code,
+    "claude-cli": lambda model, spec: subscriptions.build_claude_code(model, spec, mode="cli"),
+    "claude-oauth": lambda model, spec: subscriptions.build_claude_code(model, spec, mode="oauth"),
+    "codex": subscriptions.build_codex,
+    "codex-cli": lambda model, spec: subscriptions.build_codex(model, spec, mode="cli"),
+    "codex-oauth": lambda model, spec: subscriptions.build_codex(model, spec, mode="oauth"),
+    "cursor": subscriptions.build_cursor,
+    "cursor-cli": subscriptions.build_cursor,
+}
+
+# Providers that accept a bare shorthand (`tp.configure(lm="subscription")` or `"claude-code"`).
+SHORTHAND_PROVIDERS = {
+    "subscription",
+    "claude-code",
+    "claude-cli",
+    "claude-oauth",
+    "codex",
+    "codex-cli",
+    "codex-oauth",
+    "cursor",
+    "cursor-cli",
+}
+_NON_LITELLM_PREFIXES = ("claude-cli/", "codex-cli/", "cursor-cli/", "claude-code/", "openai-codex/")
 
 
 def make_lm(spec: str) -> dspy.LM:
     """Build an LM from a model string.
 
-    `provider:model` routes through a known gateway: `openrouter:openai/gpt-6-luna`,
-    `portkey:<provider slug>/<model>`, or `typesafe:jev-latest` (decision outputs only).
+    `provider:model` routes through a known gateway or existing AI coding subscription:
+    `openrouter:openai/gpt-6-luna`, `portkey:<provider slug>/<model>`,
+    `typesafe:jev-latest` (decision outputs only), `subscription` (auto-detect),
+    `claude-code[:<model>]`, `codex[:<model>]`, or `cursor[:<model>]`.
     Anything else is a plain litellm model string,
     passed through as is (`anthropic/claude-...`, `ollama_chat/llama3:8b`).
     """
     _load_env()
+    if spec in SHORTHAND_PROVIDERS:
+        return PROVIDERS[spec]("", spec)
     prefix, sep, model = spec.partition(":")
     if sep and "/" not in prefix:
         if prefix not in PROVIDERS:
             raise ValueError(f"unknown LM provider {prefix!r} in {spec!r}; known: {', '.join(PROVIDERS)}. "
                              "Plain litellm model strings (no 'provider:') also work.")
-        if not model:
+        if not model and prefix not in SHORTHAND_PROVIDERS:
             raise ValueError(f"{spec!r} names no model")
         return PROVIDERS[prefix](model, spec)
     return _labeled(dspy.LM(spec), "litellm", spec)
@@ -212,6 +247,8 @@ def call_cost(model: str, prompt_tokens: int, completion_tokens: int) -> float |
     price = _config.prices.get(model)
     if price is not None:
         return (prompt_tokens * price[0] + completion_tokens * price[1]) / 1e6
+    if model.startswith(_NON_LITELLM_PREFIXES):
+        return None
     try:
         import litellm
 
@@ -319,7 +356,8 @@ class Executor:
 
     async def call(self, module: dspy.Module, lm: dspy.LM, inputs: dict[str, Any],
                    timeout: float | None = None, op: str = "lm") -> dspy.Prediction:
-        timeout = timeout or _config.request_timeout
+        default_timeout = _config.cli_timeout if getattr(lm, "_tp_cli", False) else _config.request_timeout
+        timeout = timeout if timeout is not None else default_timeout
         async with self.semaphore:
             self.stats.calls += 1
             start = time.monotonic()

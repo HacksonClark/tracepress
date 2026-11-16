@@ -1,0 +1,11 @@
+{
+  "name": "tracepress",
+  "version": "0.1.3",
+  "description": "LLM-powered map/reduce over agent traces using your existing Claude Code, Codex, or Cursor subscription.",
+  "author": {
+    "name": "TracePress Contributors"
+  },
+  "repository": "https://github.com/HacksonClark/tracepress",
+  "license": "Apache-2.0",
+  "skills": "./skills/"
+}

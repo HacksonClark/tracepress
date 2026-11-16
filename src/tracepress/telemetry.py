@@ -50,7 +50,8 @@ NOTICE = (
 OPS = {"map", "filter", "select", "explode", "reduce", "lm_map", "lm_filter", "lm_extract", "lm_reduce", "lm_fold", "join"}
 SOURCES = {
     "HarborAdapter": "harbor", "ATIFAdapter": "atif", "RowsAdapter": "rows", "ReplayAdapter": "replay",
-    "ClaudeCodeAdapter": "claude_code", "CodexAdapter": "codex", "OTelAdapter": "otel", "OTLPReceiver": "otlp",
+    "ClaudeCodeAdapter": "claude_code", "CodexAdapter": "codex", "CursorAdapter": "cursor",
+    "OTelAdapter": "otel", "OTLPReceiver": "otlp",
 }
 PUBLIC_ERROR_MODULES = ("builtins", "asyncio", "concurrent", "tracepress", "dspy", "litellm", "pydantic", "json")
 

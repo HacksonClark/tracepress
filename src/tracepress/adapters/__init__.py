@@ -2,6 +2,7 @@ from .atif import ATIFAdapter, read_atif
 from .base import Adapter, RowsAdapter, from_pandas, from_rows
 from .claude_code import ClaudeCodeAdapter, read_claude_code
 from .codex import CodexAdapter, read_codex
+from .cursor import CursorAdapter, read_cursor
 from .harbor import HarborAdapter, read_harbor
 from .otel import OTelAdapter, read_otel
 from .otlp import OTLPReceiver, otlp
@@ -13,6 +14,7 @@ __all__ = [
     "ATIFAdapter",
     "ClaudeCodeAdapter",
     "CodexAdapter",
+    "CursorAdapter",
     "HarborAdapter",
     "OTelAdapter",
     "OTLPReceiver",
@@ -24,6 +26,7 @@ __all__ = [
     "read_chatgpt",
     "read_claude_code",
     "read_codex",
+    "read_cursor",
     "read_dspy",
     "read_harbor",
     "read_otel",
