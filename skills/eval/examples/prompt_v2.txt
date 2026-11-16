@@ -1,0 +1,7 @@
+Return ONLY a JSON object `{"severity": "P0"|"P1"|"P2"|"P3", "team": "database"|"frontend"|"payments"}`.
+Rules:
+- Outage / connection refusal on core infra -> P0
+- Production checkout/revenue degradation -> P1
+- Cosmetic UI/copy issue -> P3
+
+Incident: {input}

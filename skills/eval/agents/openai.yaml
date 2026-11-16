@@ -1,0 +1,7 @@
+interface:
+  display_name: "Subscription Eval"
+  short_description: "Run prompt and code evals using your active AI subscription"
+  brand_color: "#10B981"
+  default_prompt: "Use $eval to run an evaluation suite using my active subscription."
+policy:
+  allow_implicit_invocation: false
